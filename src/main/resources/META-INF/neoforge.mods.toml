@@ -1,0 +1,43 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+issueTrackerURL="https://localhost/invalid"
+
+[[mods]]
+modId="dhcompatfix"
+version="${fix_version}"
+displayName="DH Compat Half-Construction Fix (Iris ${iris_target})"
+description="Repairs an Iris Distant Horizons compat instance that was cached while DH reported rendering disabled, which otherwise leaves LODs silently not rendering for the lifetime of that pipeline. Version-locked to Iris ${iris_mod_version}: the fix targets that release's DHCompatInternal constructor shape and is not claimed to be safe on any other."
+
+[[dependencies.dhcompatfix]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21.1,21.2)"
+    ordering="NONE"
+    side="CLIENT"
+
+[[dependencies.dhcompatfix]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1,1.22)"
+    ordering="NONE"
+    side="CLIENT"
+
+# The lock. This fix is only correct for the Iris release whose DHCompatInternal
+# constructor it was written against, so a different Iris must refuse to load the jar
+# rather than get a patch aimed at a shape it may no longer have. Ranges are verified
+# empirically on every build (see the load log) - version qualifier ordering around
+# betas is not assumed.
+[[dependencies.dhcompatfix]]
+    modId="iris"
+    type="required"
+    versionRange="${iris_version_range}"
+    ordering="NONE"
+    side="CLIENT"
+
+[[dependencies.dhcompatfix]]
+    modId="distanthorizons"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="CLIENT"

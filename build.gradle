@@ -1,0 +1,60 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.137'
+}
+
+version = project.mod_version
+group = 'dev.lab.dhcompatfix'
+
+// Target-first naming: this jar sorts next to the jar it patches in a mods folder,
+// e.g. iris-1.8.14-beta.1-dhcompatfix-0.1.0.jar
+base { archivesName = "iris-${project.iris_target}-dhcompatfix" }
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neo_version
+    mods {
+        dhcompatfix {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+// Single source of truth for the version we patch. Both the archive name and the
+// mods.toml dependency range are derived from these properties, so the lock cannot
+// drift away from the filename.
+processResources {
+    def tpl = [
+            fix_version       : project.mod_version,
+            iris_target       : project.iris_target,
+            iris_mod_version  : project.iris_mod_version,
+            iris_version_range: project.iris_version_range,
+            mc_version        : project.game_version
+    ]
+    inputs.properties tpl
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand tpl
+    }
+}
+
+// Deliberately NO compileOnly dependency on the iris or distanthorizons jars.
+// The mixin targets by name string and every read/write is reflective, so this jar
+// compiles against nothing but NeoForge + Minecraft. Because the fix is version-locked
+// in mods.toml, a mismatched Iris refuses to load rather than silently applying a patch
+// to a constructor that may no longer be shaped the way this fix assumes. If the shape
+// does change, the hook never fires and DhCompatFix logs that it is inert.
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.register('fixJar', Jar) {
+    group = 'build'
+    description = 'Builds the standalone, version-locked DH compat repair mod.'
+    archiveBaseName = "iris-${project.iris_target}-dhcompatfix"
+    archiveVersion = project.mod_version
+    destinationDirectory = layout.buildDirectory.dir('libs')
+    from sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+}
